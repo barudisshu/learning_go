@@ -255,18 +255,180 @@ func main() {
 
 空标识符可用来临时规避编译器对未使用变量和导入包的错误检查。但请注意，它是预置成员，不能重新定义。
 
+## 常量
+
+常量表示编译期确定的字符、字符串、数字或布尔值。
+
+```go
+const x, y int = 123, 0x22
+const s = "hello, world!"
+const c = '我'
+
+const (
+    i, f = 1, 0.123
+    b    = false
+)
+```
+
+可以在代码块中定义常量，不曾使用的常量不会因为编译错误。
+
+```go
+func main() {
+    const x = 123
+    println(x)
+    
+    const y = 1.23
+
+    {
+        const x = "abc"
+        println(x)
+    }   
+}
+```
+
+如果显示指定类型，必须确保常量左右值类型一致，需要时可做显式转换。
+
+```go
+const (
+    x, y int  = 99, -999
+    b    byte = byte(x)
+    n         = uint8(y) // 错误， 超出uint长度
+)
+```
+
+常量值也可以是某些编译器能计算出结果的表达式，如unsalfe.Sizeof、len、cap等。
+
+```go
+const (
+    ptrSize = unsafe.Sizeof(uintptr(0))
+    strSize = len("hello, world!")
+)
+```
+
+在常量组中如不指定类型和初始化值，则与上一行非空常量右值（表达式文本）相同。
+
+```go
+import "fmt"
+
+func main() {
+	const (
+		x uint16 = 120
+		y        // 与上一行x类型、右值相同
+		s = "abc"
+		z 		// 与s类型、右值相同
+
+	)
+
+	fmt.Printf("%T, %v\n", y, y) // 输出类型和值
+	fmt.Printf("%T, %v\n", z, z)
+}
+```
+
+### 枚举
+Go并没有明确意义上的enum定义，不过可借助iota标识符实现一组自增常量值来实现枚举类型。
+
+```go
+const (
+    x = iota    // 0
+    y           // 1
+    z           // 2
+)
+```
+
+```go
+const (
+    _  = iota // 0
+    KB = 1 << (10 * iota)
+    MB
+    GB
+)
+```
+自增作用范围为常量组。可在多常量定义中使用多个iota。
+
+```go
+const (
+    _, _ = iota, iota * 10
+    a, b
+    c, d
+)
+```
+
+如果中断了iota自增，必须显式恢复。且后续自增值按行序递增，
+
+```go
+const (
+    a = iota		// 0
+    b				// 1
+    c = 100			// 100
+    d				// 100
+    e = iota		// 4
+    f				// 5
+)
+```
+
+自增默认数据类型为int，可显式指定类型。
+
+```go
+const (
+    a         = iota // int
+    b float32 = iota // float32
+    c         = iota // float32
+)
+```
+
+在实际编码中，建议用自定义类型实现用途明确的枚举类型。但这并不能将取值范围限定在预定义的枚举值内。
+
+```go
+type color byte
+
+const (
+	black color = iota
+	red
+	blue
+)
+
+func test(c color) {
+	println(c)
+}
+
+func main() {
+	test(red)
+	test(100)		// 100 并未超出color/byte类型取值范围
+	
+	x := 2
+	test(x)			// 错误： x的类型为int
+}
+```
+
+### 展开
+
+常量除"只读"外，和变量究竟有什么不同？
+
+```go
+var x = 0x100
+
+const y = 0x200
+
+func main() {
+	println(&x, x)
+	println(&y, y) // 错误：cannot take the address of y
+}
+```
+
+不同于变量在运行期分配存储内存，常量通常会被编译器在预处理阶段直接展开，作为指令数据使用。
+
+```go
+const y = 0x200
+
+func main() {
+    println(y)
+}
+```
+
+数字常量不会分配存储空间，无须像变量那样通过内存寻址来取值，因此无须获取地址。
 
 
-
-
-
-
-
-
-
-
-
-
+## 基本类型
 
 
 

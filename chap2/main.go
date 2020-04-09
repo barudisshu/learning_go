@@ -1,9 +1,10 @@
 package main
 
-import "strconv"
+var x = 0x100
+
+const y = 0x200
 
 func main() {
-
-	x, _ := strconv.Atoi("12")		// 忽略Atoi的err返回值
-	println(x)
+	println(&x, x)
+	println(&y, y) // 错误：cannot take the address of y
 }
